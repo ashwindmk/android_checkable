@@ -4,6 +4,8 @@ import android.R
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.PorterDuff
+import android.os.Parcel
+import android.os.Parcelable
 import android.util.AttributeSet
 import android.util.Log
 import android.widget.Checkable
@@ -11,8 +13,8 @@ import androidx.appcompat.widget.AppCompatImageButton
 import com.ashwin.android.checkable.Constant
 
 class CheckableImageButton(context: Context, attributeSet: AttributeSet) : AppCompatImageButton(
-    context,
-    attributeSet
+        context,
+        attributeSet
 ), Checkable {
     private var mChecked: Boolean = false
 
@@ -89,5 +91,58 @@ class CheckableImageButton(context: Context, attributeSet: AttributeSet) : AppCo
     fun setIconColors(colorStateList: ColorStateList?) {
         imageTintList = colorStateList
         isDuplicateParentStateEnabled = true
+    }
+
+     class SavedState : BaseSavedState {
+        var count = false
+
+        /**
+         * Constructor called from [CounterFab.onSaveInstanceState]
+         */
+        constructor(superState: Parcelable?) : super(superState) {}
+
+        /**
+         * Constructor called from [.CREATOR]
+         */
+        constructor(`in`: Parcel) : super(`in`) {
+            count = `in`.readBoolean()
+        }
+
+        override fun writeToParcel(out: Parcel, flags: Int) {
+            super.writeToParcel(out, flags)
+            out.writeBoolean(count)
+        }
+
+        override fun toString(): String {
+            return (CheckableImageButton::class.java.getSimpleName() + "." + SavedState::class.java.simpleName + "{"
+                    + Integer.toHexString(System.identityHashCode(this))
+                    + " count=" + count + "}")
+        }
+
+        companion object {
+            val CREATOR: Parcelable.Creator<SavedState?> = object : Parcelable.Creator<SavedState?> {
+                override fun createFromParcel(`in`: Parcel): SavedState? {
+                    return SavedState(`in`)
+                }
+
+                override fun newArray(size: Int): Array<SavedState?> {
+                    return arrayOfNulls(size)
+                }
+            }
+        }
+    }
+
+    override fun onSaveInstanceState(): Parcelable? {
+        val superState = super.onSaveInstanceState()
+        val ss: SavedState = SavedState(superState)
+        ss.count = mChecked
+        return ss
+    }
+
+    override fun onRestoreInstanceState(state: Parcelable) {
+        val ss: SavedState = state as SavedState
+        super.onRestoreInstanceState(ss.superState)
+        mChecked = ss.count
+        requestLayout()
     }
 }
